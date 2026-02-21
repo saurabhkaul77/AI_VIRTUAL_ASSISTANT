@@ -8,7 +8,10 @@ export const userDataContext = createContext();
 function UserContext ({ children }){
     const serverUrl = "http://localhost:8000"
 
-    const[userData, setUserData] = useState(null)
+    const [userData, setUserData] = useState(null)
+    const [frontendImage, setFrontendImage] = useState(null);
+    const [backendImage, setBackendImage] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
     const handleCurrentUser = async()=>{
         try {
             const result = await axios.get(`${serverUrl}/api/user/current`, 
@@ -25,7 +28,7 @@ function UserContext ({ children }){
     },[])
 
     const value = {
-        serverUrl,userData, setUserData
+        serverUrl,userData, setUserData,backendImage, setBackendImage,frontendImage, setFrontendImage,selectedImage, setSelectedImage
     }
   return (
       <userDataContext.Provider value={value}>

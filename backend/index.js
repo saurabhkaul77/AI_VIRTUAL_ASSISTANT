@@ -19,7 +19,8 @@ app.use("/api/auth",authRouter)
 app.use("/api/user",userRouter)
 
 
-app.listen(port, () => {
-    connectDb()
-    console.log(`Server is running`)
+connectDb().then(()=>{
+   app.listen(port, ()=>{
+      console.log("Server running")
+   })
 })

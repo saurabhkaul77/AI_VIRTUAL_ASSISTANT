@@ -8,5 +8,4 @@ const getToken = async (userId)=>{
         console.log(error)        
     }
 }
-
 export default getToken
