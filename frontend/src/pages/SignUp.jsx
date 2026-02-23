@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import axios from "axios";
-import { userDataContext } from '../context/userContext';
+import { userDataContext } from '../context/UserContext';
 
 
 function SignUp(){
