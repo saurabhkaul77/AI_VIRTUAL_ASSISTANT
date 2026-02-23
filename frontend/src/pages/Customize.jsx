@@ -8,7 +8,7 @@ import four from "../assets/four.jpg"
 import five from "../assets/five.jpg"
 import seven from "../assets/seven.jpg"
 import { IoMdImages } from "react-icons/io";
-import { userDataContext } from '../context/userContext';
+import { userDataContext } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { MdKeyboardBackspace } from 'react-icons/md'
 
