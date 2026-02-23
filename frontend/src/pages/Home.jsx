@@ -1,43 +1,43 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { userDataContext } from '../context/userContext'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
-import aiImg from '../assets/ai.gif'
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { userDataContext } from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import aiImg from "../assets/ai.gif";
 import { CgMenuRight } from "react-icons/cg";
 import { RxCross1 } from "react-icons/rx";
-import userImg from '../assets/user.gif'
+import userImg from "../assets/user.gif";
 
 function Home() {
-  const {userData, serverUrl, setUserData, getGeminiResponse} = useContext(userDataContext)
-  const navigate = useNavigate()
-  const [listening, setListening] = useState(false)
-  const [userText, setUserText] = useState("")
-  const [aiText, setAiText] = useState("")
+  const { userData, serverUrl, setUserData, getGeminiResponse } =
+    useContext(userDataContext);
+  const navigate = useNavigate();
+  const [listening, setListening] = useState(false);
+  const [userText, setUserText] = useState("");
+  const [aiText, setAiText] = useState("");
   const isSpeakingRef = useRef(false);
-  const recognitionRef = useRef(null)
-  const [ham,setHam]=useState(false)
-  const isRecognizingRef=useRef(false)
-  const synth = window.speechSynthesis
+  const recognitionRef = useRef(null);
+  const [ham, setHam] = useState(false);
+  const isRecognizingRef = useRef(false);
+  const synth = window.speechSynthesis;
 
-
-  const handleLogOut=async()=>{
+  const handleLogOut = async () => {
     try {
-      const result = await axios.get(`${serverUrl}/api/auth/logout`,
-        {withCredentials: true})
-        navigate("/signin")
-        setUserData(null)
+      const result = await axios.get(`${serverUrl}/api/auth/logout`, {
+        withCredentials: true,
+      });
+      setUserData(null);
+      navigate("/signin");
     } catch (error) {
-      setUserData(null)
-      console.log(error);      
-    }    
-  }
+      setUserData(null);
+      console.log(error);
+    }
+  };
 
   const startRecognition = () => {
-    if(!isSpeakingRef.current && !isRecognizingRef.current){
-
+    if (!isSpeakingRef.current && !isRecognizingRef.current) {
       try {
         recognitionRef.current?.start();
-        console.log("Recognition requested to start");        
+        console.log("Recognition requested to start");
       } catch (error) {
         if (error.name !== "InvalidStateError") {
           console.error("Start error:", error);
@@ -46,31 +46,70 @@ function Home() {
     }
   };
 
+  // const speak = (text) => {
+  //   const utterence = new SpeechSynthesisUtterance(text);
+  //   utterence.lang = "hi-IN";
+  //   const voices = window.speechSynthesis.getVoices();
+  //   const hindiVoice = voices.find((v) => v.lang === "hi-IN");
+  //   if (hindiVoice) {
+  //     utterence.voice = hindiVoice;
+  //   }
+
+  //   isSpeakingRef.current = true;
+  //   utterence.onend = () => {
+  //     setAiText("");
+  //     isSpeakingRef.current = false;
+  //     setTimeout(() => {
+  //       startRecognition(); // ⏳ Delay se race condition avoid hoti hai
+  //     }, 800);
+  //   };
+  //   synth.cancel(); // 🛑 pehle se koi speech ho to band karo
+  //   synth.speak(utterence);
+  // };
+
+
   const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'hi-IN';
-    const voices = window.speechSynthesis.getVoices();
-    const hindiVoice = voices.find(v => v.lang === 'hi-IN');
-    if(hindiVoice){
-      utterance.voice = hindiVoice
-    }
+  const synth = window.speechSynthesis;
+
+  recognitionRef.current?.stop(); // stop mic before speaking
+
+  const speakNow = () => {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+
+    const utter = new SpeechSynthesisUtterance(text);
+
+    const voice =
+      voices.find(v => v.lang.includes("en")) ||
+      voices[0];
+
+    utter.voice = voice;
+    utter.volume = 1;
+    utter.rate = 1;
+    utter.pitch = 1;
+
+    utter.onend = () => {
+      setAiText("");
+      isSpeakingRef.current = false;
+      setTimeout(startRecognition, 700);
+    };
+
+    utter.onerror = e => console.error("Speech error:", e);
 
     isSpeakingRef.current = true;
-    utterance.onend = () => {
-      setAiText("")
-      isSpeakingRef.current = false;
-      setTimeout(()=>{
-        startRecognition();
-      },800)
-    }
-    synth.cancel()
-    synth.speak(utterance);
+
+    synth.cancel();
+    synth.speak(utter);
   };
 
-
-  const handleCommand = (data)=>{
-    const {type, userInput, response} = data
-    speak(response)
+  if (!synth.getVoices().length)
+    synth.onvoiceschanged = speakNow;
+  else
+    speakNow();
+};
+  const handleCommand = (data) => {
+    const { type, userInput, response } = data;
+    speak(response);
 
     if (type === "google-search") {
       const query = encodeURIComponent(userInput);
@@ -88,6 +127,7 @@ function Home() {
     if (type === "weather-show") {
       window.open(`https://www.google.com/search?q=weather`, "_blank");
     }
+
     if (type === "youtube-search" || type === "youtube-play") {
       const query = encodeURIComponent(userInput);
       window.open(
@@ -95,23 +135,24 @@ function Home() {
         "_blank",
       );
     }
+  };
 
-  }
-  useEffect(()=>{
-    const SpeechRecognition = 
-      window.SpeechRecognition || window.webkitSpeechRecognition
-    const recognition = new SpeechRecognition() 
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
-    recognition.lang = 'en-US';
+    recognition.lang = "en-US";
     recognition.interimResults = false;
 
-    recognitionRef.current = recognition
+    recognitionRef.current = recognition;
 
-    let isMounted = true;
-    
-    const startTimeout = setTimeout(()=>{
-      if(isMounted && !isSpeakingRef.current && !isRecognizingRef.current){
+    let isMounted = true; // flag to avoid setState on unmounted component
+
+    // Start recognition after 1 second delay only if component still mounted
+    const startTimeout = setTimeout(() => {
+      if (isMounted && !isSpeakingRef.current && !isRecognizingRef.current) {
         try {
           recognition.start();
           console.log("Recognition requested to start");
@@ -121,36 +162,35 @@ function Home() {
           }
         }
       }
-    },1000)
+    }, 1000);
 
-    recognition.onstart = () =>{            
-      isRecognizingRef.current = true
-      setListening(true)
-    }
+    recognition.onstart = () => {
+      isRecognizingRef.current = true;
+      setListening(true);
+    };
 
     recognition.onend = () => {
-      isRecognizingRef.current = false
-      setListening(false)
-
-      if(!isMounted && !isSpeakingRef.current){
-        setTimeout(()=>{
-          if(isMounted){
+      isRecognizingRef.current = false;
+      setListening(false);
+      if (isMounted && !isSpeakingRef.current) {
+        setTimeout(() => {
+          if (isMounted) {
             try {
               recognition.start();
               console.log("Recognition restarted");
-            } catch (error) {
+            } catch (e) {
               if (e.name !== "InvalidStateError") console.error(e);
             }
           }
-        },1000)
+        }, 1000);
       }
-    }
+    };
 
-    recognition.onerror = (event) =>{
-      console.warn("Recognition Error",event.error);
-      isRecognizingRef.current = false
-      setListening(false)
-      if(event.error !== "aborted" && isMounted && !isSpeakingRef.current){
+    recognition.onerror = (event) => {
+      console.warn("Recognition error:", event.error);
+      isRecognizingRef.current = false;
+      setListening(false);
+      if (event.error !== "aborted" && isMounted && !isSpeakingRef.current) {
         setTimeout(() => {
           if (isMounted) {
             try {
@@ -161,25 +201,26 @@ function Home() {
             }
           }
         }, 1000);
-      }       
-    }
+      }
+    };
 
-    recognition.onresult= async (e)=>{
-      const transcript = e.results[e.results.length-1][0].transcript.trim()
-      
-
-      if(transcript.toLowerCase().includes(userData.assistantName.toLowerCase())){
-        setAiText("")
-        setUserText(transcript)
+    recognition.onresult = async (e) => {
+      const transcript = e.results[e.results.length - 1][0].transcript.trim();
+      if (
+        transcript.toLowerCase().includes(userData.assistantName.toLowerCase())
+      ) {
+        setAiText("");
+        setUserText(transcript);
         recognition.stop();
         isRecognizingRef.current = false;
-        setListening(false)
-        const data = await getGeminiResponse(transcript)        
-        handleCommand(data)
-        setAiText(data.response)
-        setUserData("")
+        setListening(false);
+        const data = await getGeminiResponse(transcript);
+        handleCommand(data);
+        setAiText(data.response);
+        setUserText("");
       }
-    }
+    };
+
     const greeting = new SpeechSynthesisUtterance(
       `Hello ${userData.name}, what can I help you with?`,
     );
@@ -187,19 +228,17 @@ function Home() {
 
     window.speechSynthesis.speak(greeting);
 
-    return ()=>{  
+    return () => {
       isMounted = false;
       clearTimeout(startTimeout);
       recognition.stop();
       setListening(false);
-      isRecognizingRef.current = false;    
-    }
-
-  },[])
-
+      isRecognizingRef.current = false;
+    };
+  }, []);
 
   return (
-    <div className="w-full h-[100vh] bg-gradient-to-t from-[black] to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden">
+    <div className="w-full h-[100vh] bg-gradient-to-t from-[black] to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden" >
       <CgMenuRight
         className="lg:hidden text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]"
         onClick={() => setHam(true)}
@@ -265,9 +304,6 @@ function Home() {
       </h1>
     </div>
   );
-
-
- 
 }
 
-export default Home
+export default Home;

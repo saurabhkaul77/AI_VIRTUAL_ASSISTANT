@@ -7,11 +7,12 @@ export const getCurrentUser = async (req, res) => {
     const userId = req.userId;
     const user = await User.findById(userId).select("-password");
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ message: "user not found" });
     }
+
     return res.status(200).json(user);
   } catch (error) {
-    return res.status(400).json({ message: `getCurrentUser error: ${error}` });
+    return res.status(400).json({ message: "get current user error" });
   }
 };
 
@@ -47,15 +48,14 @@ export const askToAssistant = async (req, res) => {
     user.save();
     const userName = user.name;
     const assistantName = user.assistantName;
-
     const result = await geminiResponse(command, assistantName, userName);
 
     const jsonMatch = result.match(/{[\s\S]*}/);
     if (!jsonMatch) {
-      return res.status(400).json({ response: "Sorry, i can't understand" });
+      return res.ststus(400).json({ response: "sorry, i can't understand" });
     }
     const gemResult = JSON.parse(jsonMatch[0]);
-
+    console.log(gemResult);
     const type = gemResult.type;
 
     switch (type) {
@@ -69,7 +69,7 @@ export const askToAssistant = async (req, res) => {
         return res.json({
           type,
           userInput: gemResult.userInput,
-          response: `current time is ${moment().format("hh:mm:A")}`,
+          response: `current time is ${moment().format("hh:mm A")}`,
         });
       case "get-day":
         return res.json({
@@ -103,6 +103,6 @@ export const askToAssistant = async (req, res) => {
           .json({ response: "I didn't understand that command." });
     }
   } catch (error) {
-    return res.status(500).json({ message: `askToAssistant error: ${error}` });
+    return res.status(500).json({ response: "ask assistant error" });
   }
 };
