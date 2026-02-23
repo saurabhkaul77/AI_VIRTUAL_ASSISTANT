@@ -46,67 +46,27 @@ function Home() {
     }
   };
 
-  // const speak = (text) => {
-  //   const utterence = new SpeechSynthesisUtterance(text);
-  //   utterence.lang = "hi-IN";
-  //   const voices = window.speechSynthesis.getVoices();
-  //   const hindiVoice = voices.find((v) => v.lang === "hi-IN");
-  //   if (hindiVoice) {
-  //     utterence.voice = hindiVoice;
-  //   }
-
-  //   isSpeakingRef.current = true;
-  //   utterence.onend = () => {
-  //     setAiText("");
-  //     isSpeakingRef.current = false;
-  //     setTimeout(() => {
-  //       startRecognition(); // ⏳ Delay se race condition avoid hoti hai
-  //     }, 800);
-  //   };
-  //   synth.cancel(); // 🛑 pehle se koi speech ho to band karo
-  //   synth.speak(utterence);
-  // };
-
-
   const speak = (text) => {
-  const synth = window.speechSynthesis;
-
-  recognitionRef.current?.stop(); // stop mic before speaking
-
-  const speakNow = () => {
-    const voices = synth.getVoices();
-    if (!voices.length) return;
-
-    const utter = new SpeechSynthesisUtterance(text);
-
-    const voice =
-      voices.find(v => v.lang.includes("en")) ||
-      voices[0];
-
-    utter.voice = voice;
-    utter.volume = 1;
-    utter.rate = 1;
-    utter.pitch = 1;
-
-    utter.onend = () => {
-      setAiText("");
-      isSpeakingRef.current = false;
-      setTimeout(startRecognition, 700);
-    };
-
-    utter.onerror = e => console.error("Speech error:", e);
+    const utterence = new SpeechSynthesisUtterance(text);
+    utterence.lang = "hi-IN";
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find((v) => v.lang === "hi-IN");
+    if (hindiVoice) {
+      utterence.voice = hindiVoice;
+    }
 
     isSpeakingRef.current = true;
-
-    synth.cancel();
-    synth.speak(utter);
+    utterence.onend = () => {
+      setAiText("");
+      isSpeakingRef.current = false;
+      setTimeout(() => {
+        startRecognition(); // ⏳ Delay se race condition avoid hoti hai
+      }, 800);
+    };
+    synth.cancel(); // 🛑 pehle se koi speech ho to band karo
+    synth.speak(utterence);
   };
 
-  if (!synth.getVoices().length)
-    synth.onvoiceschanged = speakNow;
-  else
-    speakNow();
-};
   const handleCommand = (data) => {
     const { type, userInput, response } = data;
     speak(response);
@@ -238,7 +198,7 @@ function Home() {
   }, []);
 
   return (
-    <div className="w-full h-[100vh] bg-gradient-to-t from-[black] to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden" >
+    <div className="w-full h-[100vh] bg-gradient-to-t from-[black] to-[#02023d] flex justify-center items-center flex-col gap-[15px] overflow-hidden">
       <CgMenuRight
         className="lg:hidden text-white absolute top-[20px] right-[20px] w-[25px] h-[25px]"
         onClick={() => setHam(true)}
