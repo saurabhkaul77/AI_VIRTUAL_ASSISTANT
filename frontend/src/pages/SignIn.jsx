@@ -4,7 +4,7 @@ import { IoMdEyeOff } from "react-icons/io";
 import { useState } from 'react';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userDataContext } from '../context/userContext';
+import { userDataContext } from '../context/UserContext';
 import axios from 'axios';
 
 
